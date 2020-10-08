@@ -41,19 +41,29 @@ impl system::Trait for Test {
 	type MaximumExtrinsicWeight = MaximumBlockWeight;
 	type MaximumBlockLength = MaximumBlockLength;
 	type AvailableBlockRatio = AvailableBlockRatio;
-	type Version = ();
-	type PalletInfo = ();
+    type Version = ();
+    type PalletInfo = ();
+    // type ModuleToIndex = ();
 	type AccountData = ();
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 }
 
-impl Trait for Test {
-	type Event = ();
+impl pallet_assets::Trait for Test {
+    type Event = ();
+    type Balance = u128;
+    type AssetId = u128;
 }
 
-pub type TemplateModule = Module<Test>;
+impl Trait for Test {
+    type Event = ();
+    type PalletAssetId = u128;
+}
+
+pub type Pooler = Module<Test>;
+pub type Assets = pallet_assets::Module<Test>;
+
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {

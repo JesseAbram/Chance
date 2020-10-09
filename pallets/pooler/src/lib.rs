@@ -1,10 +1,18 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch, traits::Get, Parameter, ensure};
-use frame_system::ensure_signed;
+use frame_support::{
+	traits::{Currency, ExistenceRequirement::AllowDeath, Randomness},
+	decl_module, decl_storage, decl_event, decl_error, dispatch, Parameter, ensure
+};
+use frame_system::{self as system, ensure_signed};
 use pallet_assets as assets;
-use sp_runtime::traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup};
+use sp_runtime::{
+    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion},
+    ModuleId
+};
+use codec::Encode;
+use std::ops::{Mul, Div};
 
 // #[cfg(test)]
 // mod mock;
@@ -16,12 +24,17 @@ pub trait Trait: frame_system::Trait + assets::Trait {
 	/// Because this pallet emits events, it depends on the runtime's definition of an event.
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 	type PalletAssetId: Parameter + AtLeast32Bit + Default + Copy;
-
+	type Currency: Currency<Self::AccountId>;
+	type RandomnessSource: Randomness<u128>;
 }
+
+type AccountIdOf<T> = <T as system::Trait>::AccountId;
+type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Balance;
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Pooler {
 		PalletAssetId get(fn pallet_asset_id): T::PalletAssetId;
+		Nonce get(fn nonce): u32;
 	}
 }
 
@@ -38,10 +51,8 @@ decl_event!(
 decl_error! {
 	pub enum Error for Module<T: Trait> {
 		/// Error if module is not initiated.
-        NotInitiated,
-        
-        AlreadyInitiated,
-		
+       NotEnoughLiquidity,
+
 	}
 }
 
@@ -54,25 +65,27 @@ decl_module! {
 		// Events must be initialized if they are used by the pallet.
 		fn deposit_event() = default;
 
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[weight = 10_000 + T::DbWeight::get().writes(1)]
-		pub fn initiate(origin) -> dispatch::DispatchResult {
-            ensure_signed(origin)?;
-			ensure!(Self::pallet_asset_id() == Zero::zero(), Error::<T>::AlreadyInitiated);
-			// initiate asset in the asset module
-			// let assetId = <assets::Module<T>>::issue(origin, 100)?;
-			let assetId = One::one();
-			<PalletAssetId<T>>::set(assetId);
-			Ok(())
-		}
 		#[weight = 0]
-		pub fn bet(origin) -> dispatch::DispatchResult {
-            ensure_signed(origin)?;
-			//make sure there is liquiidty available 
-			//pay fee
-			// take bet push onto array of bets 
-			// have OCW settle
+		pub fn bet(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::ensure_liquidity(&amount)?;
+			let fee_multiplier = 99;
+			let converted_amount = amount; //TryInto::<u128>::try_into(amount).unwrap_or(u128::max_value());
+			let bet = converted_amount.mul(fee_multiplier.into()).div(100.into());
+			// TODO add slippage
+			let subject = Self::encode_and_update_nonce();
+
+			let random_result = T::RandomnessSource::random(&subject);
+			let win;
+			match random_result % 2 == 0 {
+				false => win = false,
+				true => win = true
+			};
+			if win {
+				<T as Trait>::Currency::transfer(&Self::account_id(), &who, bet.into(), AllowDeath)?;
+			} else {
+				<T as Trait>::Currency::transfer(&who, &Self::account_id(), bet.into(), AllowDeath)?;
+			}
 			Ok(())
 		}
 
@@ -81,5 +94,22 @@ decl_module! {
 }
 
 impl<T: Trait> Module<T> {
+
+	fn account_id() -> T::AccountId{
+        const PALLET_ID: ModuleId = ModuleId(*b"assethdl");
+        PALLET_ID.into_account()
+	}
+	
+	fn ensure_liquidity(amount: &BalanceOf<T>) -> dispatch::DispatchResult {
+		let current_balance = <T as Trait>::Currency::free_balance(&Self::account_id());
+		ensure!(amount <= &current_balance, Error::<T>::NotEnoughLiquidity);
+		Ok(())
+	}
+
+	fn encode_and_update_nonce() -> Vec<u8> {
+		let nonce = Nonce::get();
+		Nonce::put(nonce.wrapping_add(1));
+		nonce.encode()
+	}
     
 }

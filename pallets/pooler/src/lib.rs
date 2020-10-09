@@ -6,11 +6,11 @@ use frame_system::ensure_signed;
 use pallet_assets as assets;
 use sp_runtime::traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup};
 
-#[cfg(test)]
-mod mock;
+// #[cfg(test)]
+// mod mock;
 
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 
 pub trait Trait: frame_system::Trait + assets::Trait {
 	/// Because this pallet emits events, it depends on the runtime's definition of an event.

@@ -19,6 +19,9 @@ impl_outer_origin! {
 		pub const MaximumBlockLength: u32 = 2 * 1024;
 		pub const AvailableBlockRatio: Perbill = Perbill::one();
 	}
+	pub type Balances = pallet_balances::Module<Test>;
+	pub type System = frame_system::Module<Test>;
+
 	impl system::Trait for Test {
 		type BaseCallFilter = ();
 		type Origin = Origin;
@@ -42,20 +45,42 @@ impl_outer_origin! {
 		type Version = ();
 		type PalletInfo = ();
 		// type ModuleToIndex = ();
-		type AccountData = ();
+		type AccountData = pallet_balances::AccountData<u64>;
 		type OnNewAccount = ();
 		type OnKilledAccount = ();
 		type SystemWeightInfo = ();
 	}
+
+	parameter_types! {
+		pub const ExistentialDeposit: u64 = 1;
+	}
+
+	impl pallet_balances::Trait for Test {
+		type Balance = u64;
+		type Event = ();
+		type DustRemoval = ();
+		type ExistentialDeposit = ExistentialDeposit;
+		type AccountStore = System;
+		type WeightInfo = ();
+		type MaxLocks = ();
+	}
+	
 	
 	impl Trait for Test {
 		type Event = ();
 		type Balance = u64;
 		type AssetId = u32;
+		type Currency = Balances;
 	}
 	pub type Assets = Module<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, 200), (2, 10), (3, 10), (4, 10), (5, 2)],
+	}.assimilate_storage(&mut t).unwrap();
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }

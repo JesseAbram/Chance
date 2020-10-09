@@ -133,9 +133,16 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{Parameter, decl_module, decl_event, decl_storage, decl_error, ensure};
-use sp_runtime::traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup};
-use frame_system::ensure_signed;
+use frame_support::{    
+traits::{Currency, ExistenceRequirement::KeepAlive},
+Parameter, decl_module, decl_event, decl_storage, decl_error, ensure, dispatch
+};
+use frame_system::{self as system, ensure_signed};
+
+use sp_runtime::{
+    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion},
+    ModuleId
+};
 
 #[cfg(test)]
 mod mock;
@@ -153,36 +160,20 @@ pub trait Trait: frame_system::Trait {
 
 	/// The arithmetic type of asset identifier.
 	type AssetId: Parameter + AtLeast32Bit + Default + Copy;
+
+    type Currency: Currency<Self::AccountId>;
+
 }
+
+type AccountIdOf<T> = <T as system::Trait>::AccountId;
+type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Balance;
 
 decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 		type Error = Error<T>;
 
 		fn deposit_event() = default;
-		/// Issue a new class of fungible assets. There are, and will only ever be, `total`
-		/// such assets and they'll all belong to the `origin` initially. It will have an
-		/// identifier `AssetId` instance: this will be specified in the `Issued` event.
-		///
-		/// # <weight>
-		/// - `O(1)`
-		/// - 1 storage mutation (codec `O(1)`).
-		/// - 2 storage writes (condec `O(1)`).
-		/// - 1 event.
-		/// # </weight>
-		#[weight = 0]
-		fn issue(origin, #[compact] total: T::Balance) {
-			let origin = ensure_signed(origin)?;
-
-			let id = Self::next_asset_id();
-			<NextAssetId<T>>::mutate(|id| *id += One::one());
-
-			<Balances<T>>::insert((id, &origin), total);
-			<TotalSupply<T>>::insert(id, total);
-
-			Self::deposit_event(RawEvent::Issued(id, origin, total));
-		}
-
+		
 		/// Move some assets from one holder to another.
 		///
 		/// # <weight>
@@ -193,40 +184,20 @@ decl_module! {
 		/// # </weight>
 		#[weight = 0]
 		fn transfer(origin,
-			#[compact] id: T::AssetId,
 			target: <T::Lookup as StaticLookup>::Source,
-			#[compact] amount: T::Balance
+			#[compact] amount: BalanceOf<T>
 		) {
-			let origin = ensure_signed(origin)?;
-			let origin_account = (id, origin.clone());
-			let origin_balance = <Balances<T>>::get(&origin_account);
+			let who = ensure_signed(origin)?;
+			let origin_balance = <Balances<T>>::get(&who);
 			let target = T::Lookup::lookup(target)?;
 			ensure!(!amount.is_zero(), Error::<T>::AmountZero);
 			ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 
-			Self::deposit_event(RawEvent::Transferred(id, origin, target.clone(), amount));
-			<Balances<T>>::insert(origin_account, origin_balance - amount);
-			<Balances<T>>::mutate((id, target), |balance| *balance += amount);
+			// Self::deposit_event(RawEvent::Transferred(&who, &target, amount));
+			<Balances<T>>::insert(who, origin_balance - amount);
+			<Balances<T>>::mutate(target, |balance| *balance += amount);
 		}
-
-		/// Destroy any assets of `id` owned by `origin`.
-		///
-		/// # <weight>
-		/// - `O(1)`
-		/// - 1 storage mutation (codec `O(1)`).
-		/// - 1 storage deletion (codec `O(1)`).
-		/// - 1 event.
-		/// # </weight>
-		#[weight = 0]
-		fn destroy(origin, #[compact] id: T::AssetId) {
-			let origin = ensure_signed(origin)?;
-			let balance = <Balances<T>>::take((id, &origin));
-			ensure!(!balance.is_zero(), Error::<T>::BalanceZero);
-
-			<TotalSupply<T>>::mutate(id, |total_supply| *total_supply -= balance);
-			Self::deposit_event(RawEvent::Destroyed(id, origin, balance));
-		}
-	}
+}
 }
 
 decl_event! {
@@ -238,7 +209,7 @@ decl_event! {
 		/// Some assets were issued. \[asset_id, owner, total_supply\]
 		Issued(AssetId, AccountId, Balance),
 		/// Some assets were transferred. \[asset_id, from, to, amount\]
-		Transferred(AssetId, AccountId, AccountId, Balance),
+		Transferred(AccountId, AccountId, Balance),
 		/// Some assets were destroyed. \[asset_id, owner, balance\]
 		Destroyed(AssetId, AccountId, Balance),
 	}
@@ -258,27 +229,56 @@ decl_error! {
 decl_storage! {
 	trait Store for Module<T: Trait> as Assets {
 		/// The number of units of assets held by any given account.
-		Balances: map hasher(blake2_128_concat) (T::AssetId, T::AccountId) => T::Balance;
+		Balances: map hasher(blake2_128_concat) T::AccountId => BalanceOf<T>;
 		/// The next asset identifier up for grabs.
-		NextAssetId get(fn next_asset_id): T::AssetId;
-		/// The total unit supply of an asset.
 		///
 		/// TWOX-NOTE: `AssetId` is trusted, so this is safe.
-		TotalSupply: map hasher(twox_64_concat) T::AssetId => T::Balance;
+		TotalSupply get(fn total_supply): BalanceOf<T>;
 	}
 }
 
 // The main implementation block for the module.
 impl<T: Trait> Module<T> {
-	// Public immutables
 
 	/// Get the asset `id` balance of `who`.
-	pub fn balance(id: T::AssetId, who: T::AccountId) -> T::Balance {
-		<Balances<T>>::get((id, who))
+	pub fn balance(who: T::AccountId) -> BalanceOf<T> {
+		<Balances<T>>::get(who)
 	}
 
-	/// Get the total supply of an asset `id`.
-	pub fn total_supply(id: T::AssetId) -> T::Balance {
-		<TotalSupply<T>>::get(id)
+	pub fn mint(who: T::AccountId, amount: BalanceOf<T>) -> dispatch::DispatchResult{
+		T::Currency::transfer(&who, &Self::account_id(), amount, KeepAlive)?;
+		let payout;
+		let total_supply = Self::total_supply();
+		if total_supply == 0.into() {
+			payout = amount;
+		} else {
+			//TODO handle putting in less then 1% of value and handle greater than 100%
+			let after_payout = total_supply + amount;
+			let amount_to_payout = amount * (100.into()) / after_payout;
+			payout = amount_to_payout;
+		}
+		<Balances<T>>::mutate(who, |balance| *balance += payout);
+		<TotalSupply<T>>::mutate(|total| *total += payout);
+		Ok(())
 	}
+
+	pub fn burn(who: T::AccountId, amount: BalanceOf<T>)  -> dispatch::DispatchResult{
+		let origin_balance = <Balances<T>>::get(&who);
+		ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
+		let total_supply = Self::total_supply();
+		let payout = amount * (100.into()) / total_supply;
+		T::Currency::transfer(&Self::account_id(), &who, amount, KeepAlive)?;
+		<Balances<T>>::mutate(who, |balance| *balance -= payout);
+		<TotalSupply<T>>::mutate(|total| *total -= payout);
+		Ok(())
+
+	}
+
+	fn account_id() -> T::AccountId{
+        const PALLET_ID: ModuleId = ModuleId(*b"Poolerrr");
+        PALLET_ID.into_account()
+    }
 }
+
+
+

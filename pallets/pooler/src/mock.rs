@@ -53,7 +53,7 @@ impl system::Trait for Test {
 impl pallet_assets::Trait for Test {
     type Event = ();
     type Balance = u128;
-    type AssetId = u128;
+	type AssetId = u128;
 }
 
 impl Trait for Test {

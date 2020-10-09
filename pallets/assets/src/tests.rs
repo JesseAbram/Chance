@@ -12,6 +12,17 @@ fn issuing_asset_units_to_issuer_should_work() {
 }
 
 #[test]
+fn minting_assets_multiple_times() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(Assets::mint(1, 90));
+		assert_eq!(Assets::balance(1), 90);
+		assert_ok!(Assets::mint(2, 10));
+		assert_eq!(Assets::balance(2), 10);
+	});
+}
+
+
+#[test]
 fn querying_total_supply_should_work() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(Assets::mint(1, 100));
@@ -23,7 +34,7 @@ fn querying_total_supply_should_work() {
 		assert_eq!(Assets::balance(1), 50);
 		assert_eq!(Assets::balance(2), 19);
 		assert_eq!(Assets::balance(3), 31);
-		// assert_eq!(Assets::total_supply(0), 69);
+		assert_eq!(Assets::total_supply(), 100);
 	});
 }
 

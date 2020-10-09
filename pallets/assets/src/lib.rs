@@ -134,7 +134,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{    
-traits::{Currency, ExistenceRequirement::KeepAlive},
+traits::{Currency, ExistenceRequirement::AllowDeath},
 Parameter, decl_module, decl_event, decl_storage, decl_error, ensure, dispatch
 };
 use frame_system::{self as system, ensure_signed};
@@ -246,7 +246,7 @@ impl<T: Trait> Module<T> {
 	}
 
 	pub fn mint(who: T::AccountId, amount: BalanceOf<T>) -> dispatch::DispatchResult{
-		T::Currency::transfer(&who, &Self::account_id(), amount, KeepAlive)?;
+		T::Currency::transfer(&who, &Self::account_id(), amount, AllowDeath)?;
 		let payout;
 		let total_supply = Self::total_supply();
 		if total_supply == 0.into() {
@@ -267,7 +267,7 @@ impl<T: Trait> Module<T> {
 		ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 		let total_supply = Self::total_supply();
 		let payout = amount * (100.into()) / total_supply;
-		T::Currency::transfer(&Self::account_id(), &who, amount, KeepAlive)?;
+		T::Currency::transfer(&Self::account_id(), &who, amount, AllowDeath)?;
 		<Balances<T>>::mutate(who, |balance| *balance -= payout);
 		<TotalSupply<T>>::mutate(|total| *total -= payout);
 		Ok(())

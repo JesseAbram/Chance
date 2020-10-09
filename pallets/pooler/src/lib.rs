@@ -67,21 +67,6 @@ decl_module! {
 			Ok(())
 		}
 		#[weight = 0]
-		pub fn deposit(origin) -> dispatch::DispatchResult { 
-            ensure_signed(origin)?;
-			// take in funds send out token tracker them out
-			Ok(())
-
-		}
-		#[weight = 0]
-		pub fn withdraw(origin) -> dispatch::DispatchResult {
-            ensure_signed(origin)?;
-			// take in token send out funds
-			// check array of known bets make sure there is liquidity available
-			Ok(())
-
-		}
-		#[weight = 0]
 		pub fn bet(origin) -> dispatch::DispatchResult {
             ensure_signed(origin)?;
 			//make sure there is liquiidty available 

@@ -14,10 +14,11 @@ fn issuing_asset_units_to_issuer_should_work() {
 #[test]
 fn minting_assets_multiple_times() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 90));
+		assert_ok!(Assets::deposit(Origin::signed(1), 90));
 		assert_eq!(Assets::balance(1), 90);
-		assert_ok!(Assets::mint(2, 10));
+		assert_ok!(Assets::deposit(Origin::signed(2), 10));
 		assert_eq!(Assets::balance(2), 10);
+		assert_eq!(Assets::total_supply(), 100);
 	});
 }
 
@@ -25,7 +26,7 @@ fn minting_assets_multiple_times() {
 #[test]
 fn querying_total_supply_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 100));
+		assert_ok!(Assets::deposit(Origin::signed(1), 100));
 		assert_eq!(Assets::balance(1), 100);
 		assert_ok!(Assets::transfer(Origin::signed(1), 2, 50));
 		assert_eq!(Assets::balance(1), 50);
@@ -41,7 +42,7 @@ fn querying_total_supply_should_work() {
 #[test]
 fn transferring_amount_above_available_balance_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 100));
+		assert_ok!(Assets::deposit(Origin::signed(1), 100));
 		assert_eq!(Assets::balance(1), 100);
 		assert_ok!(Assets::transfer(Origin::signed(1), 2, 50));
 		assert_eq!(Assets::balance(1), 50);
@@ -52,12 +53,12 @@ fn transferring_amount_above_available_balance_should_work() {
 #[test]
 fn transferring_amount_more_than_available_balance_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 100));
+		assert_ok!(Assets::deposit(Origin::signed(1), 100));
 		assert_eq!(Assets::balance(1), 100);
 		assert_ok!(Assets::transfer(Origin::signed(1), 2, 50));
 		assert_eq!(Assets::balance(1), 50);
 		assert_eq!(Assets::balance(2), 50);
-		assert_ok!(Assets::burn(1, 50));
+		assert_ok!(Assets::withdraw(Origin::signed(1), 50));
 		assert_eq!(Assets::balance(1), 0);
 		assert_noop!(Assets::transfer(Origin::signed(1), 1, 50), Error::<Test>::BalanceLow);
 	});
@@ -66,7 +67,7 @@ fn transferring_amount_more_than_available_balance_should_not_work() {
 #[test]
 fn transferring_less_than_one_unit_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 100));
+		assert_ok!(Assets::deposit(Origin::signed(1), 100));
 		assert_eq!(Assets::balance(1), 100);
 		assert_noop!(Assets::transfer(Origin::signed(1), 2, 0), Error::<Test>::AmountZero);
 	});
@@ -75,7 +76,7 @@ fn transferring_less_than_one_unit_should_not_work() {
 #[test]
 fn transferring_more_units_than_total_supply_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Assets::mint(1, 100));
+		assert_ok!(Assets::deposit(Origin::signed(1), 100));
 		assert_eq!(Assets::balance(1), 100);
 		assert_noop!(Assets::transfer(Origin::signed(1), 2, 101), Error::<Test>::BalanceLow);
 	});

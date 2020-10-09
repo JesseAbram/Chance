@@ -197,6 +197,24 @@ decl_module! {
 			<Balances<T>>::insert(who, origin_balance - amount);
 			<Balances<T>>::mutate(target, |balance| *balance += amount);
 		}
+
+		#[weight = 0]
+		pub fn deposit(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult { 
+			let who = ensure_signed(origin)?;
+			Self::mint(who, amount)?;
+			//add event
+			Ok(())
+
+		}
+		#[weight = 0]
+		pub fn withdraw(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::burn(who, amount)?;
+			// take in token send out funds
+			// check array of known bets make sure there is liquidity available
+			Ok(())
+
+		}
 }
 }
 

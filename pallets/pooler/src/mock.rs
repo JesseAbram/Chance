@@ -21,6 +21,9 @@ parameter_types! {
 	pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 }
 
+pub type Balances = pallet_balances::Module<Test>;
+pub type System = frame_system::Module<Test>;
+
 impl system::Trait for Test {
 	type BaseCallFilter = ();
 	type Origin = Origin;
@@ -43,8 +46,7 @@ impl system::Trait for Test {
 	type AvailableBlockRatio = AvailableBlockRatio;
     type Version = ();
     type PalletInfo = ();
-    // type ModuleToIndex = ();
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<u64>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -54,11 +56,27 @@ impl pallet_assets::Trait for Test {
     type Event = ();
     type Balance = u128;
 	type AssetId = u128;
+	type Currency = Balances;
+}
+
+parameter_types! {
+	pub const ExistentialDeposit: u64 = 1;
+}
+
+impl pallet_balances::Trait for Test {
+	type Balance = u64;
+	type Event = ();
+	type DustRemoval = ();
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
+	type MaxLocks = ();
 }
 
 impl Trait for Test {
     type Event = ();
-    type PalletAssetId = u128;
+	type PalletAssetId = u128;
+	type Currency = Balances;
 }
 
 pub type Pooler = Module<Test>;

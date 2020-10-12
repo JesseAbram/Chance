@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{    
-traits::{Currency, ExistenceRequirement::AllowDeath},
+traits::{Currency, ExistenceRequirement::AllowDeath, StoredMap},
 Parameter, decl_module, decl_event, decl_storage, decl_error, ensure, dispatch
 };
 use frame_system::{self as system, ensure_signed};

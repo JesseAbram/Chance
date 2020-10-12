@@ -2,7 +2,7 @@
 
 
 use frame_support::{
-	traits::{Currency, ExistenceRequirement::{KeepAlive, AllowDeath}},
+	traits::{Currency, Vec, ExistenceRequirement::{KeepAlive, AllowDeath}},
 	decl_module, decl_storage, decl_event, decl_error, dispatch, Parameter, ensure, debug
 };
 
@@ -13,8 +13,7 @@ use sp_runtime::{
     ModuleId
 };
 use codec::Encode;
-use std::ops::{Mul, Div};
-
+use core::ops::{Mul, Div};
 #[cfg(test)]
 mod mock;
 
@@ -29,12 +28,12 @@ pub trait Trait: frame_system::Trait + assets::Trait {
 }
 
 type AccountIdOf<T> = <T as system::Trait>::AccountId;
-type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Balance;
+pub type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Balance;
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Pooler {
+		ScheduledBet get(fn scheduled_bet): Vec<(T::AccountId, BalanceOf<T>)>;
 		PalletAssetId get(fn pallet_asset_id): T::PalletAssetId;
-		ScheduledBet get(fn scheduled_bet): Vec<(T::AccountId, BalanceOf<T>)>
 	}
 }
 
@@ -96,9 +95,10 @@ impl<T: Trait> Module<T> {
 
 	pub fn scheduled_bet_callback(origin: T::Origin, better: T::AccountId, bet: BalanceOf<T>, did_win: bool) -> dispatch::DispatchResult {
 		//ensure_offchainWorker
-		debug::info!("Entering callback.");
+		debug::info!("Entering callback. {}, {:#?}", did_win, bet);
 		if did_win {
-			<T as Trait>::Currency::transfer(&Self::account_id(), &better, bet.into(), AllowDeath)?;
+			let winnings = bet.mul(2.into());
+			<T as Trait>::Currency::transfer(&Self::account_id(), &better, winnings.into(), AllowDeath)?;
 		}
 		ScheduledBet::<T>::try_mutate(|sch| ->  dispatch::DispatchResult {
 			match sch.binary_search(&(better, bet)) {

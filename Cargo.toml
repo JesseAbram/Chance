@@ -4,9 +4,9 @@ panic = 'unwind'
 [workspace]
 members = [
     'node',
-    'pallets/assets',
-    'pallets/admin',
     'pallets/pooler',
+    'pallets/admin',
+    'pallets/chance',
     'pallets/ocw-control',
     'runtime',
 ]

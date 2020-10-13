@@ -3296,9 +3296,9 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "hex-literal",
  "pallet-admin",
- "pallet-assets",
  "pallet-aura",
  "pallet-balances",
+ "pallet-chance",
  "pallet-grandpa",
  "pallet-ocw",
  "pallet-pooler",
@@ -3487,19 +3487,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-assets"
-version = "2.0.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-balances",
- "parity-scale-codec",
- "sp-core",
- "sp-io",
- "sp-runtime",
-]
-
-[[package]]
 name = "pallet-aura"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3551,6 +3538,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-chance"
+version = "2.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-admin",
+ "pallet-balances",
+ "pallet-pooler",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "pallet-finality-tracker"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3599,7 +3601,7 @@ dependencies = [
  "frame-system",
  "hex-literal",
  "pallet-admin",
- "pallet-pooler",
+ "pallet-chance",
  "parity-scale-codec",
  "parking_lot 0.10.2",
  "serde_json 1.0.44",
@@ -3615,7 +3617,6 @@ version = "2.0.0"
 dependencies = [
  "frame-support",
  "frame-system",
- "pallet-assets",
  "pallet-balances",
  "parity-scale-codec",
  "sp-core",

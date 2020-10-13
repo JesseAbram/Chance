@@ -40,8 +40,8 @@ pub use frame_support::{
 	},
 };
 pub use pallet_ocw;
-pub use pallet_assets;
 pub use pallet_pooler;
+pub use pallet_chance;
 pub use pallet_admin;
 
 /// Import the template pallet.
@@ -267,7 +267,7 @@ impl pallet_sudo::Trait for Runtime {
 	type Call = Call;
 }
 
-impl pallet_pooler::Trait for Runtime {
+impl pallet_chance::Trait for Runtime {
     type Event = Event;
 	type PalletAssetId = u128;
 	type Currency = Balances;
@@ -282,7 +282,7 @@ impl pallet_admin::Trait for Runtime {
 	type MaxSettlers = MaxSettlers;
 }
 
-impl pallet_assets::Trait for Runtime {
+impl pallet_pooler::Trait for Runtime {
 	type Event = Event;
 	type Balance = u64;
 	type AssetId = u32;
@@ -380,8 +380,8 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		OcwControl: pallet_ocw::{Module, Call, Event<T>},
-		Assets: pallet_assets::{Module, Call, Storage, Event<T>},
 		Pooler: pallet_pooler::{Module, Call, Storage, Event<T>},
+		Chance: pallet_chance::{Module, Call, Storage, Event<T>},
 		Admin: pallet_admin::{Module, Call, Storage,Config<T>, Event<T>},
 
 		// Include the custom logic from the template pallet in the runtime.

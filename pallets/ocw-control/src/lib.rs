@@ -20,7 +20,7 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 use sp_std::str;
-use pooler::BalanceOf;
+use chance::BalanceOf;
 
 #[cfg(feature = "std")]
 use sp_core::sr25519::{Public as Sr25519Public};
@@ -65,7 +65,7 @@ pub mod crypto {
 }
 
 /// This is the pallet's configuration trait
-pub trait Trait: system::Trait + CreateSignedTransaction<Call<Self>> + pooler::Trait + admin::Trait {
+pub trait Trait: system::Trait + CreateSignedTransaction<Call<Self>> + chance::Trait + admin::Trait {
 	/// The identifier type for an offchain worker.
 	type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 	/// The overarching dispatch call type.
@@ -108,7 +108,7 @@ decl_module! {
 			<admin::Module<T>>::ensure_settler(origin.clone())?;
 			debug::info!("Entering submit_signed. {:#?}, {:#?}, {:#?}", better, wager, did_win);
 
-			<pooler::Module<T>>::scheduled_bet_callback(origin, better.clone(), wager, did_win)?;
+			<chance::Module<T>>::scheduled_bet_callback(origin, better.clone(), wager, did_win)?;
 			if did_win {
 				Self::deposit_event(RawEvent::BetWon(better, wager));
 			} else {
@@ -119,7 +119,7 @@ decl_module! {
 		}
 
 		fn offchain_worker(block_number: T::BlockNumber) {
-            let pending_bets = <pooler::Module<T>>::scheduled_bet();
+            let pending_bets = <chance::Module<T>>::scheduled_bet();
             debug::info!("Entering offchain worker");
 			if pending_bets.len() > 0 {
 				debug::info!("Entering action");

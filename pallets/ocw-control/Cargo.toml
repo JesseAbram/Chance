@@ -46,10 +46,10 @@ version = '2.0.0'
 default-features = false
 version = '2.0.0'
 
-[dependencies.pooler]
+[dependencies.chance]
 default-features = false
-package = 'pallet-pooler'
-path = '../pooler'
+package = 'pallet-chance'
+path = '../chance'
 version = '2.0.0'
 
 [dependencies.admin]
@@ -67,6 +67,6 @@ std = [
 	'sp-io/std',
 	'sp-runtime/std',
 	'sp-std/std',
-	'pooler/std',
+	'chance/std',
 	'admin/std',
 ]

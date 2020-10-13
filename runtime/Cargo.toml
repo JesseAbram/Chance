@@ -25,9 +25,9 @@ hex-literal = { optional = true, version = '0.3.1' }
 serde = { features = ['derive'], optional = true, version = '1.0.101' }
 
 # local dependencies
-pallet-assets = { path = '../pallets/assets', default-features = false, version = '2.0.0' }
-pallet-ocw = { path = '../pallets/ocw-control', default-features = false, version = '2.0.0' }
 pallet-pooler = { path = '../pallets/pooler', default-features = false, version = '2.0.0' }
+pallet-ocw = { path = '../pallets/ocw-control', default-features = false, version = '2.0.0' }
+pallet-chance = { path = '../pallets/chance', default-features = false, version = '2.0.0' }
 pallet-admin = { path= '../pallets/admin', default-features= false, version = '2.0.0'}
 
 # Substrate dependencies
@@ -82,7 +82,7 @@ std = [
     'pallet-grandpa/std',
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
-    'pallet-assets/std',
+    'pallet-pooler/std',
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',

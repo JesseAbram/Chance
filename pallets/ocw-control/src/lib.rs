@@ -83,8 +83,8 @@ decl_event!(
 		AccountId = <T as system::Trait>::AccountId,
 		Balance = BalanceOf<T>,
 	{
-		TransferComplete(AccountId, Balance),
-		TransferRejected(AccountId, AccountId, Balance),
+		BetWon(AccountId, Balance),
+		BetLost(AccountId, Balance),
 	}
 );
 
@@ -109,9 +109,9 @@ decl_module! {
 
 			<pooler::Module<T>>::scheduled_bet_callback(origin, better.clone(), wager, did_win)?;
 			if did_win {
-				Self::deposit_event(RawEvent::TransferComplete(better, wager));
+				Self::deposit_event(RawEvent::BetWon(better, wager));
 			} else {
-				// Self::deposit_event(RawEvent::TransferRejected(better, vet));
+				Self::deposit_event(RawEvent::BetLost(better, wager));
 			}
 
 			Ok(())

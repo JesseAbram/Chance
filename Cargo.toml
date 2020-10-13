@@ -5,6 +5,7 @@ panic = 'unwind'
 members = [
     'node',
     'pallets/assets',
+    'pallets/admin',
     'pallets/pooler',
     'pallets/ocw-control',
     'runtime',

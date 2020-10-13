@@ -1,0 +1,61 @@
+[package]
+name = "pallet-admin"
+version = "2.0.0"
+authors = ["JesseAbram <jesseabramowitz@hotmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '1.3.4'
+
+[dependencies.serde]
+features = ['derive']
+optional = true
+version = '1.0.101'
+
+[dependencies.frame-support]
+default-features = false
+version = '2.0.0'
+
+[dependencies.frame-system]
+default-features = false
+version = '2.0.0'
+
+[dependencies.sp-runtime]
+default-features = false
+version = '2.0.0'
+
+[dependencies.sp-std]
+default-features = false
+version = '2.0.0'
+
+[dev-dependencies.sp-core]
+version = '2.0.0'
+
+[dev-dependencies.sp-io]
+version = '2.0.0'
+
+[dev-dependencies.pallet-balances]
+version = '2.0.0'
+
+[dev-dependencies.pallet-transaction-payment]
+version = '2.0.0'
+
+[features]
+default = ['std']
+std = [
+    'serde/std',
+    'codec/std',
+    'sp-runtime/std',
+    'sp-std/std',
+    'frame-support/std',
+    'frame-system/std',
+    'sp-core/std',
+    'sp-io/std',
+    'pallet-balances/std',
+    'pallet-transaction-payment/std',
+]

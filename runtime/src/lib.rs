@@ -42,6 +42,7 @@ pub use frame_support::{
 pub use pallet_ocw;
 pub use pallet_assets;
 pub use pallet_pooler;
+pub use pallet_admin;
 
 /// Import the template pallet.
 // pub use pallet_template;
@@ -272,6 +273,15 @@ impl pallet_pooler::Trait for Runtime {
 	type Currency = Balances;
 }
 
+parameter_types! {
+	pub const MaxSettlers: u32  = 10; 
+}
+
+impl pallet_admin::Trait for Runtime {
+	type Event = Event;
+	type MaxSettlers = MaxSettlers;
+}
+
 impl pallet_assets::Trait for Runtime {
 	type Event = Event;
 	type Balance = u64;
@@ -372,6 +382,8 @@ construct_runtime!(
 		OcwControl: pallet_ocw::{Module, Call, Event<T>},
 		Assets: pallet_assets::{Module, Call, Storage, Event<T>},
 		Pooler: pallet_pooler::{Module, Call, Storage, Event<T>},
+		Admin: pallet_admin::{Module, Call, Storage,Config<T>, Event<T>},
+
 		// Include the custom logic from the template pallet in the runtime.
 		// TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
 	}

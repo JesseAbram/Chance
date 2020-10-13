@@ -2,7 +2,7 @@
 
 
 use frame_support::{
-	traits::{Currency, Vec, ExistenceRequirement::{KeepAlive, AllowDeath}},
+	traits::{Currency, Vec, ExistenceRequirement::{KeepAlive, AllowDeath}, Get},
 	decl_module, decl_storage, decl_event, decl_error, dispatch, Parameter, ensure, debug
 };
 
@@ -10,11 +10,12 @@ use frame_system::{self as system, ensure_signed};
 use pallet_pooler as pooler;
 use pallet_admin as admin;
 use sp_runtime::{
-    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion},
+    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion, Saturating},
     ModuleId
 };
 use codec::Encode;
 use core::ops::{Mul, Div};
+use core::convert::TryInto;
 #[cfg(test)]
 mod mock;
 
@@ -24,8 +25,9 @@ mod tests;
 pub trait Trait: frame_system::Trait + pooler::Trait + admin::Trait {
 	/// Because this pallet emits events, it depends on the runtime's definition of an event.
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
-	type PalletAssetId: Parameter + AtLeast32Bit + Default + Copy;
 	type Currency: Currency<Self::AccountId>;
+	type SystemDecimals: Get<u128>;
+
 }
 
 type AccountIdOf<T> = <T as system::Trait>::AccountId;
@@ -34,7 +36,6 @@ pub type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Ba
 decl_storage! {
 	trait Store for Module<T: Trait> as Chance {
 		ScheduledBet get(fn scheduled_bet): Vec<(T::AccountId, BalanceOf<T>)>;
-		PalletAssetId get(fn pallet_asset_id): T::PalletAssetId;
 	}
 }
 
@@ -52,7 +53,8 @@ decl_error! {
 	pub enum Error for Module<T: Trait> {
 		/// Error if module is not initiated.
 	   NotEnoughLiquidity,
-	   Other
+	   Other,
+	   Conversion
 
 	}
 }
@@ -68,22 +70,26 @@ decl_module! {
 
 		#[weight = 0]
 		pub fn bet(origin, amount: BalanceOf<T>) -> dispatch::DispatchResult {
-			debug::info!("bet");
 			let who = ensure_signed(origin)?;
 			Self::ensure_liquidity(&amount)?;
-			let fee_multiplier = 99;
-			// let converted_amount = amount; //TryInto::<u128>::try_into(amount).unwrap_or(u128::max_value());
-			let bet = amount.mul(fee_multiplier.into()).div(100.into());
-			// TODO add slippage
+			let total_locked = <T as Trait>::Currency::free_balance(&Self::account_id());
+			// fee is proportional to size of bet
+			let SystemDecimals: u128 = T::SystemDecimals::get();
+			let converted_amount = TryInto::<u128>::try_into(amount).unwrap_or(u128::max_value());
+			let converted_total_locked = TryInto::<u128>::try_into(total_locked).unwrap_or(u128::max_value());
+			let fee_multiplier = 10;
+			let fee = converted_amount.mul(SystemDecimals).mul(fee_multiplier).div(converted_total_locked);
+			
+			let bet = converted_amount.saturating_sub(fee);
 
-			// take funds from account
-			<T as Trait>::Currency::transfer(&who, &Self::account_id(), bet.into(), KeepAlive)?;
+			<T as Trait>::Currency::transfer(&who, &Self::account_id(), Self::u128_to_balance(bet), KeepAlive)?;
+			// <pooler::Module<T>>::track_reserves_increase(Self::u128_to_balance(bet));			
 
 			//prep bet for offchain worker
 			ScheduledBet::<T>::try_mutate(|sch| -> dispatch::DispatchResult {
-				sch.push((who, bet));
+				sch.push((who, Self::u128_to_balance(bet)));
 				Ok(())
-			})?;			
+			})?;
 
 			Ok(())
 		}
@@ -100,6 +106,7 @@ impl<T: Trait> Module<T> {
 		if did_win {
 			let winnings = bet.mul(2.into());
 			<T as Trait>::Currency::transfer(&Self::account_id(), &better, winnings.into(), AllowDeath)?;
+			// <pooler::Module<T>>::track_reserves_decrease(winnings);			
 		}
 		ScheduledBet::<T>::try_mutate(|sch| ->  dispatch::DispatchResult {
 			match sch.binary_search(&(better, bet)) {
@@ -124,5 +131,10 @@ impl<T: Trait> Module<T> {
 		let current_balance = <T as Trait>::Currency::free_balance(&Self::account_id());
 		ensure!(amount <= &current_balance, Error::<T>::NotEnoughLiquidity);
 		Ok(())
+	}
+
+	fn u128_to_balance(input: u128) -> BalanceOf<T> {
+		let current_balance = <T as Trait>::Currency::free_balance(&Self::account_id());
+		input.try_into().unwrap_or(0.into())
 	}
 }

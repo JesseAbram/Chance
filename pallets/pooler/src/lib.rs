@@ -112,6 +112,8 @@ decl_storage! {
 		///
 		/// TWOX-NOTE: `AssetId` is trusted, so this is safe.
 		TotalSupply get(fn total_supply): BalanceOf<T>;
+
+		// Reserves get(fn reserves): BalanceOf<T>;
 	}
 }
 
@@ -137,6 +139,7 @@ impl<T: Trait> Module<T> {
 		}
 		<Balances<T>>::mutate(who, |balance| *balance += payout);
 		<TotalSupply<T>>::mutate(|total| *total += payout);
+		// <Reserves<T>>::mutate(|total| *total += amount);
 		Ok(())
 	}
 
@@ -148,9 +151,18 @@ impl<T: Trait> Module<T> {
 		T::Currency::transfer(&Self::account_id(), &who, amount, AllowDeath)?;
 		<Balances<T>>::mutate(who, |balance| *balance -= payout);
 		<TotalSupply<T>>::mutate(|total| *total -= payout);
+		// <Reserves<T>>::mutate(|total| *total -= amount);
 		Ok(())
 
 	}
+
+	// pub fn track_reserves_increase(amount: BalanceOf<T>) {
+	// 	<Reserves<T>>::mutate(|total| *total += amount);
+	// }
+
+	// pub fn track_reserves_decrease(amount: BalanceOf<T>) {
+	// 	<Reserves<T>>::mutate(|total| *total -= amount);
+	// }
 
 	fn account_id() -> T::AccountId{
         const PALLET_ID: ModuleId = ModuleId(*b"assethdl");

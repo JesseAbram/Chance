@@ -73,10 +73,23 @@ impl pallet_balances::Trait for Test {
 	type MaxLocks = ();
 }
 
+parameter_types! {
+	pub const MaxSettlers: u32  = 10; 
+}
+
+
+impl pallet_admin::Trait for Test {
+	type Event = ();
+	type MaxSettlers = MaxSettlers;
+}
+
+parameter_types! {
+	pub const SystemDecimals: u128  = 100000000000;
+}
 impl Trait for Test {
     type Event = ();
-	type PalletAssetId = u128;
 	type Currency = Balances;
+	type SystemDecimals = SystemDecimals;
 }
 
 pub type Chance = Module<Test>;
@@ -85,5 +98,14 @@ pub type Pooler = pallet_pooler::Module<Test>;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, 1000000000000000), (2, 1000000000000000), (3, 10), (4, 10), (5, 2)],
+	}.assimilate_storage(&mut t).unwrap();
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }
+
+// 2176771357523916
+// 100000000000000000

@@ -267,11 +267,16 @@ impl pallet_sudo::Trait for Runtime {
 	type Call = Call;
 }
 
+parameter_types! {
+	pub const SystemDecimals: u128  = 100000000000; 
+}
+
 impl pallet_chance::Trait for Runtime {
     type Event = Event;
-	type PalletAssetId = u128;
 	type Currency = Balances;
+	type SystemDecimals = SystemDecimals;
 }
+
 
 parameter_types! {
 	pub const MaxSettlers: u32  = 10; 

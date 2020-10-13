@@ -65,7 +65,7 @@ pub mod crypto {
 }
 
 /// This is the pallet's configuration trait
-pub trait Trait: system::Trait + CreateSignedTransaction<Call<Self>> + pooler::Trait {
+pub trait Trait: system::Trait + CreateSignedTransaction<Call<Self>> + pooler::Trait + admin::Trait {
 	/// The identifier type for an offchain worker.
 	type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 	/// The overarching dispatch call type.
@@ -105,6 +105,7 @@ decl_module! {
 
 		#[weight = (0, Pays::No)]
 		pub fn submit_signed(origin, better: T::AccountId, wager: BalanceOf<T>, did_win: bool) -> DispatchResult {
+			<admin::Module<T>>::ensure_settler(origin.clone())?;
 			debug::info!("Entering submit_signed. {:#?}, {:#?}, {:#?}", better, wager, did_win);
 
 			<pooler::Module<T>>::scheduled_bet_callback(origin, better.clone(), wager, did_win)?;

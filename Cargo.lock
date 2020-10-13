@@ -3598,6 +3598,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "hex-literal",
+ "pallet-admin",
  "pallet-pooler",
  "parity-scale-codec",
  "parking_lot 0.10.2",

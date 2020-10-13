@@ -52,6 +52,12 @@ package = 'pallet-pooler'
 path = '../pooler'
 version = '2.0.0'
 
+[dependencies.admin]
+default-features = false
+package = 'pallet-admin'
+path = '../admin'
+version = '2.0.0'
+
 [features]
 default = ['std']
 std = [
@@ -62,4 +68,5 @@ std = [
 	'sp-runtime/std',
 	'sp-std/std',
 	'pooler/std',
+	'admin/std',
 ]

@@ -112,8 +112,6 @@ decl_storage! {
 		///
 		/// TWOX-NOTE: `AssetId` is trusted, so this is safe.
 		TotalSupply get(fn total_supply): BalanceOf<T>;
-
-		// Reserves get(fn reserves): BalanceOf<T>;
 	}
 }
 
@@ -139,7 +137,6 @@ impl<T: Trait> Module<T> {
 		}
 		<Balances<T>>::mutate(who, |balance| *balance += payout);
 		<TotalSupply<T>>::mutate(|total| *total += payout);
-		// <Reserves<T>>::mutate(|total| *total += amount);
 		Ok(())
 	}
 
@@ -147,22 +144,15 @@ impl<T: Trait> Module<T> {
 		let origin_balance = <Balances<T>>::get(&who);
 		ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 		let total_supply = Self::total_supply();
-		let payout = amount * (100.into()) / total_supply;
-		T::Currency::transfer(&Self::account_id(), &who, amount, AllowDeath)?;
+		let balance_of_pallet = T::Currency::free_balance(&Self::account_id());
+		let percent_of_total = amount * (100.into()) / total_supply;
+		let payout = balance_of_pallet * percent_of_total / 100.into();
+		T::Currency::transfer(&Self::account_id(), &who, payout, AllowDeath)?;
 		<Balances<T>>::mutate(who, |balance| *balance -= payout);
 		<TotalSupply<T>>::mutate(|total| *total -= payout);
-		// <Reserves<T>>::mutate(|total| *total -= amount);
 		Ok(())
 
 	}
-
-	// pub fn track_reserves_increase(amount: BalanceOf<T>) {
-	// 	<Reserves<T>>::mutate(|total| *total += amount);
-	// }
-
-	// pub fn track_reserves_decrease(amount: BalanceOf<T>) {
-	// 	<Reserves<T>>::mutate(|total| *total -= amount);
-	// }
 
 	fn account_id() -> T::AccountId{
         const PALLET_ID: ModuleId = ModuleId(*b"assethdl");

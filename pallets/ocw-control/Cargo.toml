@@ -46,6 +46,10 @@ version = '2.0.0'
 default-features = false
 version = '2.0.0'
 
+[dev-dependencies.pallet-balances]
+default-features = false
+version = '2.0.0'
+
 [dependencies.chance]
 default-features = false
 package = 'pallet-chance'
@@ -57,6 +61,13 @@ default-features = false
 package = 'pallet-admin'
 path = '../admin'
 version = '2.0.0'
+
+[dev-dependencies.pooler]
+default-features = false
+package = 'pallet-pooler'
+path = '../pooler'
+version = '2.0.0'
+
 
 [features]
 default = ['std']

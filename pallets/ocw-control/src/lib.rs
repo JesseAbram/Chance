@@ -20,9 +20,8 @@ use sp_std::prelude::*;
 use sp_std::str;
 use chance::BalanceOf;
 
-// We use `alt_serde`, and Xanewok-modified `serde_json` so that we can compile the program
-//   with serde(features `std`) and alt_serde(features `no_std`).
-// use alt_serde::{Deserialize, Deserializer};
+#[cfg(test)]
+mod tests;
 
 pub const HTTP_REMOTE_REQUEST_STRING: &str = "http://localhost:3000/random";
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ocwc");

@@ -15,6 +15,7 @@ use sp_runtime::{
 };
 use core::ops::{Mul, Div};
 use core::convert::TryInto;
+
 #[cfg(test)]
 mod mock;
 
@@ -121,7 +122,7 @@ impl<T: Trait> Module<T> {
 
 	}
 
-	fn account_id() -> T::AccountId{
+	pub fn account_id() -> T::AccountId{
         const PALLET_ID: ModuleId = ModuleId(*b"assethdl");
         PALLET_ID.into_account()
 	}

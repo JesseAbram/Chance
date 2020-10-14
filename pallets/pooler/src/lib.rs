@@ -149,7 +149,12 @@ impl<T: Trait> Module<T> {
 		let payout = balance_of_pallet * percent_of_total / 100.into();
 		T::Currency::transfer(&Self::account_id(), &who, payout, AllowDeath)?;
 		<Balances<T>>::mutate(who, |balance| *balance -= payout);
-		<TotalSupply<T>>::mutate(|total| *total -= payout);
+		if payout > total_supply {
+			<TotalSupply<T>>::mutate(|total| *total -= *total);
+
+		} else {
+			<TotalSupply<T>>::mutate(|total| *total -= payout);
+		}
 		Ok(())
 
 	}

@@ -3,17 +3,16 @@
 
 use frame_support::{
 	traits::{Currency, Vec, ExistenceRequirement::{KeepAlive, AllowDeath}, Get},
-	decl_module, decl_storage, decl_event, decl_error, dispatch, Parameter, ensure, debug
+	decl_module, decl_storage, decl_event, decl_error, dispatch, ensure, debug
 };
 
 use frame_system::{self as system, ensure_signed};
 use pallet_pooler as pooler;
 use pallet_admin as admin;
 use sp_runtime::{
-    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion, Saturating},
+    traits::{AccountIdConversion},
     ModuleId
 };
-use codec::Encode;
 use core::ops::{Mul, Div};
 use core::convert::TryInto;
 #[cfg(test)]
@@ -74,11 +73,11 @@ decl_module! {
 			Self::ensure_liquidity(&amount)?;
 			let total_locked = <T as Trait>::Currency::free_balance(&Self::account_id());
 			// fee is proportional to size of bet
-			let SystemDecimals: u128 = T::SystemDecimals::get();
+			let system_decimals: u128 = T::SystemDecimals::get();
 			let converted_amount = TryInto::<u128>::try_into(amount).unwrap_or(u128::max_value());
 			let converted_total_locked = TryInto::<u128>::try_into(total_locked).unwrap_or(u128::max_value());
 			let fee_multiplier = 10;
-			let fee = converted_amount.mul(SystemDecimals).mul(fee_multiplier).div(converted_total_locked);
+			let fee = converted_amount.mul(system_decimals).mul(fee_multiplier).div(converted_total_locked);
 			
 			let bet = converted_amount.saturating_sub(fee);
 
@@ -134,7 +133,6 @@ impl<T: Trait> Module<T> {
 	}
 
 	fn u128_to_balance(input: u128) -> BalanceOf<T> {
-		let current_balance = <T as Trait>::Currency::free_balance(&Self::account_id());
 		input.try_into().unwrap_or(0.into())
 	}
 }

@@ -1,10 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use core::{fmt};
 use frame_support::{
 	debug, decl_error, decl_event, decl_module, dispatch::DispatchResult, traits::Get, weights::Pays,
 };
-use codec::{Decode, Encode};
 
 use frame_system::{
 	self as system,
@@ -22,14 +20,9 @@ use sp_std::prelude::*;
 use sp_std::str;
 use chance::BalanceOf;
 
-#[cfg(feature = "std")]
-use sp_core::sr25519::{Public as Sr25519Public};
-#[cfg(feature = "std")]
-use sp_core::crypto::Ss58Codec;
-
 // We use `alt_serde`, and Xanewok-modified `serde_json` so that we can compile the program
 //   with serde(features `std`) and alt_serde(features `no_std`).
-use alt_serde::{Deserialize, Deserializer};
+// use alt_serde::{Deserialize, Deserializer};
 
 pub const HTTP_REMOTE_REQUEST_STRING: &str = "http://localhost:3000/random";
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ocwc");
@@ -128,19 +121,7 @@ decl_module! {
                     let wager = bet.1.clone();
                     debug::info!("better {:#?}", better);
                     debug::info!("bet {:#?}", wager);
-
-					let account_bytes = Self::account_to_bytes(&better);
-					debug::info!("Address Encoded: {:#?}", &account_bytes);
-					// debug::info!("Address Hash: {:#?}", T::Hashing::hash(&account_bytes[..]));
-
-					#[cfg(feature = "std")]
-					let public_key = Sr25519Public::from_raw(account_bytes);
-					#[cfg(feature = "std")]
-					let public_key_ss58 = public_key.to_ss58check().to_string();
-					#[cfg(feature = "std")]
-					debug::info!("Address SS58: {:#?}", &public_key_ss58);
-					#[cfg(feature = "std")]
-					let _ = Self::fetch_if_needed(bet, &public_key_ss58);
+					let _ = Self::fetch_if_needed(bet);
 				}
 			}
 		}
@@ -148,20 +129,11 @@ decl_module! {
 }
 
 impl<T: Trait> Module<T> {
-	// This function converts a 32 byte AccountId to its byte-array equivalent form.
-	fn account_to_bytes<AccountId>(account: &AccountId) -> [u8; 32]
-		where AccountId: Encode,
-	{
-		let account_vec = account.encode();
-		let mut bytes = [0u8; 32];
-		bytes.copy_from_slice(&account_vec);
-		bytes
-	}
-
+	
 	/// Check if we have fetched Weather info before. If yes, we use the cached version that is
 	///   stored in off-chain worker storage `storage`. If no, we fetch the remote info and then
 	///   write the info into the storage for future retrieval.
-	fn fetch_if_needed(tx: (T::AccountId, BalanceOf<T>), address: &str) -> Result<(), Error<T>> {
+	fn fetch_if_needed(tx: (T::AccountId, BalanceOf<T>)) -> Result<(), Error<T>> {
 		debug::info!("Tx: {:#?}, {:#?}", &tx.0, &tx.1);
 		// Start off by creating a reference to Local Storage value.
 		// Since the local storage is common for all offchain workers, it's a good practice
@@ -207,7 +179,7 @@ impl<T: Trait> Module<T> {
 				s_lock.set(&false);
 				return Err(<Error<T>>::SubmitError);
 			}
-			match Self::fetch_n_parse(address) {
+			match Self::fetch_n_parse() {
 				Ok(true) => {
 					debug::info!("Fetch and parse returned true.");
 					s_lock.set(&false);
@@ -233,9 +205,8 @@ impl<T: Trait> Module<T> {
 	}
 
 	/// Fetch from remote and deserialize the JSON to a struct
-	fn fetch_n_parse(address: &str) -> Result<bool, Error<T>> {
-		debug::info!("Fetch and parse called with address: {:#?}.", address.clone());
-		let resp_bytes = Self::fetch_from_remote(address).map_err(|e| {
+	fn fetch_n_parse() -> Result<bool, Error<T>> {
+		let resp_bytes = Self::fetch_from_remote().map_err(|e| {
 			debug::error!("fetch_from_remote error: {:?}", e);
 			<Error<T>>::HttpFetchingError
 		})?;
@@ -260,7 +231,7 @@ impl<T: Trait> Module<T> {
 
 	/// This function uses the `offchain::http` API to query the remote Weather information,
 	///   and returns the JSON response as vector of bytes.
-	fn fetch_from_remote(address: &str) -> Result<Vec<u8>, Error<T>> {
+	fn fetch_from_remote() -> Result<Vec<u8>, Error<T>> {
 		let url_with_address = HTTP_REMOTE_REQUEST_STRING;
 		//debug::info!("URL: {}", url_with_address);
 		let remote_url_bytes = url_with_address.as_bytes().to_vec();

@@ -2,13 +2,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{    
-traits::{Currency, ExistenceRequirement::AllowDeath, StoredMap},
+traits::{Currency, ExistenceRequirement::AllowDeath},
 Parameter, decl_module, decl_event, decl_storage, decl_error, ensure, dispatch
 };
 use frame_system::{self as system, ensure_signed};
 
 use sp_runtime::{
-    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, One, StaticLookup, AccountIdConversion},
+    traits::{Member, AtLeast32Bit, AtLeast32BitUnsigned, Zero, StaticLookup, AccountIdConversion},
     ModuleId
 };
 

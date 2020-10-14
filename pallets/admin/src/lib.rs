@@ -17,11 +17,9 @@
 
 use sp_std::{prelude::*};
 use sp_runtime::{DispatchResult, DispatchError};
-use sp_runtime::traits::{Dispatchable};
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, Parameter};
-use frame_support::weights::GetDispatchInfo;
+use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure};
 use frame_support::traits::Get;
-use frame_system::{self as system, ensure_signed, ensure_root};
+use frame_system::{self as system, ensure_signed};
 
 pub trait Trait: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;

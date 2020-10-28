@@ -60,6 +60,7 @@ decl_module! {
 
         #[weight = 0]
         fn add_setter(origin, who: T::AccountId) {
+            // nitpick: I think I would leave `ensure_signed` and `ensure_settler` separate
             Self::ensure_settler(origin)?;
             Self::try_add_settler(&who)?;
 			Self::deposit_event(RawEvent::SettlerAdded(who));

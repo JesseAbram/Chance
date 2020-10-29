@@ -55,6 +55,7 @@ decl_module! {
 			ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 
 			// Self::deposit_event(RawEvent::Transferred(&who, &target, amount));
+			// best practice is to use `saturating_sub` here (though this is safe because of the ensure)
 			<Balances<T>>::insert(who, origin_balance - amount);
 			<Balances<T>>::mutate(target, |balance| *balance += amount);
 		}
@@ -108,9 +109,6 @@ decl_storage! {
 	trait Store for Module<T: Trait> as pooler {
 		/// The number of units of pooler held by any given account.
 		Balances: map hasher(blake2_128_concat) T::AccountId => BalanceOf<T>;
-		/// The next asset identifier up for grabs.
-		///
-		/// TWOX-NOTE: `AssetId` is trusted, so this is safe.
 		TotalSupply get(fn total_supply): BalanceOf<T>;
 	}
 }
@@ -140,15 +138,21 @@ impl<T: Trait> Module<T> {
 		Ok(())
 	}
 
+	// this does not seem like a burn and more like a payout function ^^
+	// I'm having trouble following what your invariants are and whether they are being kept
+	// Why is `amount` compared to a balance but then used as a percentage?
 	pub fn burn(who: T::AccountId, amount: BalanceOf<T>)  -> dispatch::DispatchResult{
 		let origin_balance = <Balances<T>>::get(&who);
 		ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 		let total_supply = Self::total_supply();
 		let balance_of_pallet = T::Currency::free_balance(&Self::account_id());
+		// nitpick: the `* 100` and `/ 100` combination seems redundant
 		let percent_of_total = amount * (100.into()) / total_supply;
 		let payout = balance_of_pallet * percent_of_total / 100.into();
 		T::Currency::transfer(&Self::account_id(), &who, payout, AllowDeath)?;
 		<Balances<T>>::mutate(who, |balance| *balance -= payout);
+		// o.O
+		// use `saturating_sub`
 		if payout > total_supply {
 			<TotalSupply<T>>::mutate(|total| *total -= *total);
 

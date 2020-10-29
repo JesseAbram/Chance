@@ -210,6 +210,7 @@ impl<T: Trait> Module<T> {
 			<Error<T>>::HttpFetchingError
 		})?;
 
+		// Not sure you need the utf8 parsing here if you change "1" to b"1"
 		let resp_str = str::from_utf8(&resp_bytes).map_err(|_| <Error<T>>::HttpFetchingError)?;
 		debug::info!("Fetch and parse fetched: {:#?}.", resp_str);
 		if resp_str == "1" {

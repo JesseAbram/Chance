@@ -78,6 +78,7 @@ decl_module! {
 			let converted_amount = TryInto::<u128>::try_into(amount).unwrap_or(u128::max_value());
 			let converted_total_locked = TryInto::<u128>::try_into(total_locked).unwrap_or(u128::max_value());
 			let fee_multiplier = 10;
+			// What do you do with the fee? Why is it not transferred anywhere?
 			let fee = converted_amount.mul(system_decimals).mul(fee_multiplier).div(converted_total_locked);
 			
 			let bet = converted_amount.saturating_sub(fee);
@@ -134,6 +135,7 @@ impl<T: Trait> Module<T> {
 	}
 
 	fn u128_to_balance(input: u128) -> BalanceOf<T> {
+		// This seems like a footgun.
 		input.try_into().unwrap_or(0.into())
 	}
 }

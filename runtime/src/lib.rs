@@ -268,12 +268,13 @@ impl pallet_sudo::Trait for Runtime {
 }
 
 parameter_types! {
-	pub const SystemDecimals: u128  = 100000000000; 
+	pub const SystemDecimals: u128  = 100_000_000_000; 
 }
 
 impl pallet_chance::Trait for Runtime {
     type Event = Event;
 	type Currency = Balances;
+	// nitpick: would change the name to sth like BaseUnit, decimals would be 12
 	type SystemDecimals = SystemDecimals;
 }
 

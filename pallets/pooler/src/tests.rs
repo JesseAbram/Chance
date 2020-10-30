@@ -13,12 +13,12 @@ fn issuing_asset_units_to_issuer_should_work() {
 
 #[test]
 fn minting_pooler_multiple_times() {
-	new_test_ext().execute_with(|| {
-		assert_ok!(Pooler::deposit(Origin::signed(1), 90));
-		assert_eq!(Pooler::balance(1), 90);
-		assert_ok!(Pooler::deposit(Origin::signed(2), 10));
-		assert_eq!(Pooler::balance(2), 10);
-		assert_eq!(Pooler::total_supply(), 100);
+	new_test_ext().execute_with(|| {				  
+		assert_ok!(Pooler::deposit(Origin::signed(1), 9000000000000));
+		assert_eq!(Pooler::balance(1), 9000000000000);
+		assert_ok!(Pooler::deposit(Origin::signed(2), 1000000000000));
+		assert_eq!(Pooler::balance(2), 1000000000000);
+		assert_eq!(Pooler::total_supply(), 10000000000000);
 	});
 }
 

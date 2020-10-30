@@ -124,16 +124,14 @@ impl<T: Trait> Module<T> {
 	}
 
 	pub fn mint(who: T::AccountId, amount: BalanceOf<T>) -> dispatch::DispatchResult{
+		let balance_of_pallet = T::Currency::free_balance(&Self::account_id());
 		T::Currency::transfer(&who, &Self::account_id(), amount, AllowDeath)?;
 		let payout;
 		let total_supply = Self::total_supply();
 		if total_supply == 0.into() {
 			payout = amount;
 		} else {
-			//TODO handle putting in less then 1% of value and handle greater than 100%
-			let after_payout = total_supply + amount;
-			let amount_to_payout = amount * (100.into()) / after_payout;
-			payout = amount_to_payout;
+			payout = amount * total_supply / balance_of_pallet;
 		}
 		<Balances<T>>::mutate(who, |balance| *balance += payout);
 		<TotalSupply<T>>::mutate(|total| *total += payout);

@@ -82,8 +82,7 @@ decl_module! {
 			
 			let bet = converted_amount.saturating_sub(fee);
 
-			<T as Trait>::Currency::transfer(&who, &Self::account_id(), Self::u128_to_balance(bet), KeepAlive)?;
-			// <pooler::Module<T>>::track_reserves_increase(Self::u128_to_balance(bet));			
+			<T as Trait>::Currency::transfer(&who, &Self::account_id(), amount, KeepAlive)?;
 
 			//prep bet for offchain worker
 			ScheduledBet::<T>::try_mutate(|sch| -> dispatch::DispatchResult {

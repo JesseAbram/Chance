@@ -45,7 +45,7 @@ impl_outer_origin! {
 		type Version = ();
 		type PalletInfo = ();
 		// type ModuleToIndex = ();
-		type AccountData = pallet_balances::AccountData<u64>;
+		type AccountData = pallet_balances::AccountData<u128>;
 		type OnNewAccount = ();
 		type OnKilledAccount = ();
 		type SystemWeightInfo = ();
@@ -56,7 +56,7 @@ impl_outer_origin! {
 	}
 
 	impl pallet_balances::Trait for Test {
-		type Balance = u64;
+		type Balance = u128;
 		type Event = ();
 		type DustRemoval = ();
 		type ExistentialDeposit = ExistentialDeposit;
@@ -68,7 +68,7 @@ impl_outer_origin! {
 	
 	impl Trait for Test {
 		type Event = ();
-		type Balance = u64;
+		type Balance = u128;
 		type AssetId = u32;
 		type Currency = Balances;
 	}
@@ -78,7 +78,7 @@ impl_outer_origin! {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, 200), (2, 10), (3, 10), (4, 10), (5, 2)],
+		balances: vec![(1, 20000000000000), (2, 1000000000000), (3, 10), (4, 10), (5, 2)],
 	}.assimilate_storage(&mut t).unwrap();
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));

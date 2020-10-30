@@ -214,7 +214,7 @@ fn test_ocw_call_bet_won() {
 		let bet_after = [];
 		assert_eq!(Chance::scheduled_bet(), bet_after);
 		println!("check on bets after {:#?}", Chance::scheduled_bet());
-		assert_eq!(Balances::free_balance(Chance::account_id()), 99010000000000);
+		assert_eq!(Balances::free_balance(Chance::account_id()), 99020000000000);
 
 
 	})
@@ -238,7 +238,7 @@ fn test_ocw_call_bet_lost() {
 		println!("check on bets after {:#?}", Chance::scheduled_bet());
 		
 		println!("account {:#?}", Balances::free_balance(Chance::account_id()));
-		assert_eq!(Balances::free_balance(Chance::account_id()), 100990000000000);
+		assert_eq!(Balances::free_balance(Chance::account_id()), 101000000000000);
 
 	})
 }

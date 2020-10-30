@@ -19,6 +19,32 @@ fn minting_pooler_multiple_times() {
 		assert_ok!(Pooler::deposit(Origin::signed(2), 1000000000000));
 		assert_eq!(Pooler::balance(2), 1000000000000);
 		assert_eq!(Pooler::total_supply(), 10000000000000);
+		assert_ok!(Pooler::transfer(Origin::signed(1), 6, Pooler::balance(1)));
+		assert_ok!(Pooler::withdraw(Origin::signed(6), Pooler::balance(6)));
+		assert_eq!(Test_Balances::free_balance(6), 9000000000000);
+
+	});
+}
+
+#[test]
+fn minting_burning_pooler_multiple_times_fee_accumilation() {
+	new_test_ext().execute_with(|| {				  
+		assert_ok!(Pooler::deposit(Origin::signed(1), 9000000000000));
+		assert_ok!(Test_Balances::transfer(Origin::signed(3), Pooler::account_id(), 9000000000000));
+		assert_eq!(Pooler::balance(1), 9000000000000);
+		assert_ok!(Pooler::deposit(Origin::signed(2), 1000000000000));
+		assert_eq!(Pooler::balance(2), 500000000000);
+		assert_eq!(Pooler::total_supply(), 9500000000000);
+
+		assert_ok!(Pooler::transfer(Origin::signed(1), 6, Pooler::balance(1)));
+		assert_ok!(Pooler::withdraw(Origin::signed(6), Pooler::balance(6)));
+		assert_eq!(Test_Balances::free_balance(6), 18000000000000);
+
+		assert_eq!(Pooler::total_supply(), 500000000000);
+
+		assert_ok!(Pooler::withdraw(Origin::signed(2), Pooler::balance(2)));
+		assert_eq!(Test_Balances::free_balance(2), 1000000000000);
+
 	});
 }
 

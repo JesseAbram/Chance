@@ -143,21 +143,15 @@ impl<T: Trait> Module<T> {
 		ensure!(origin_balance >= amount, Error::<T>::BalanceLow);
 		let total_supply = Self::total_supply();
 		let balance_of_pallet = T::Currency::free_balance(&Self::account_id());
-		let percent_of_total = amount * (100.into()) / total_supply;
-		let payout = balance_of_pallet * percent_of_total / 100.into();
-		T::Currency::transfer(&Self::account_id(), &who, payout, AllowDeath)?;
-		<Balances<T>>::mutate(who, |balance| *balance -= payout);
-		if payout > total_supply {
-			<TotalSupply<T>>::mutate(|total| *total -= *total);
-
-		} else {
-			<TotalSupply<T>>::mutate(|total| *total -= payout);
-		}
+		let payout = amount * balance_of_pallet / total_supply;
+		T::Currency::transfer(&Self::account_id(), &who, payout, AllowDeath)?;		
+		<Balances<T>>::mutate(who, |balance| *balance -= amount);
+		<TotalSupply<T>>::mutate(|total| *total -= amount);
 		Ok(())
 
 	}
 
-	fn account_id() -> T::AccountId{
+	pub fn account_id() -> T::AccountId{
         const PALLET_ID: ModuleId = ModuleId(*b"assethdl");
         PALLET_ID.into_account()
     }

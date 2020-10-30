@@ -19,7 +19,7 @@ impl_outer_origin! {
 		pub const MaximumBlockLength: u32 = 2 * 1024;
 		pub const AvailableBlockRatio: Perbill = Perbill::one();
 	}
-	pub type Balances = pallet_balances::Module<Test>;
+	pub type Test_Balances = pallet_balances::Module<Test>;
 	pub type System = frame_system::Module<Test>;
 
 	impl system::Trait for Test {
@@ -70,7 +70,7 @@ impl_outer_origin! {
 		type Event = ();
 		type Balance = u128;
 		type AssetId = u32;
-		type Currency = Balances;
+		type Currency = Test_Balances;
 	}
 	pub type Pooler = Module<Test>;
 
@@ -78,7 +78,7 @@ impl_outer_origin! {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, 20000000000000), (2, 1000000000000), (3, 10), (4, 10), (5, 2)],
+		balances: vec![(1, 20000000000000), (2, 1000000000000), (3, 9000000000000), (4, 10), (5, 2)],
 	}.assimilate_storage(&mut t).unwrap();
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
